@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Product App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .product-list {
+            margin: 20px 0;
+        }
+        .product-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .product-form {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        input {
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<h1>Product Management</h1>
+
+<div class="product-list" id="productList">
+    <!-- Продукты будут загружены здесь -->
+</div>
+
+<div class="product-form">
+    <h2>Add New Product</h2>
+    <input type="text" id="productName" placeholder="Product name">
+    <input type="number" id="productPrice" placeholder="Price" step="0.01">
+    <button onclick="addProduct()">Add Product</button>
+</div>
+
+<script>
+    // Функция для загрузки продуктов
+    async function loadProducts() {
+        try {
+            const response = await fetch('/api/products');
+            const products = await response.json();
+            displayProducts(products);
+        } catch (error) {
+            console.error('Error loading products:', error);
+        }
+    }
+
+    // Функция для отображения продуктов
+    function displayProducts(products) {
+        const productList = document.getElementById('productList');
+        productList.innerHTML = '';
+
+        products.forEach(product => {
+            const productElement = document.createElement('div');
+            productElement.className = 'product-item';
+            productElement.innerHTML = `
+                    <h3>${product.name}</h3>
+                    <p>Price: $${product.price.toFixed(2)}</p>
+                `;
+            productList.appendChild(productElement);
+        });
+    }
+
+    // Функция для добавления нового продукта
+    async function addProduct() {
+        const name = document.getElementById('productName').value;
+        const price = parseFloat(document.getElementById('productPrice').value);
+
+        if (!name || isNaN(price)) {
+            alert('Please fill all fields correctly');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, price })
+            });
+
+            const newProduct = await response.json();
+            loadProducts(); // Перезагружаем список после добавления
+
+            // Очищаем поля формы
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+        } catch (error) {
+            console.error('Error adding product:', error);
+        }
+    }
+
+    // Загружаем продукты при загрузке страницы
+    window.onload = loadProducts;
+</script>
+</body>
+</html>
